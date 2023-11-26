@@ -150,6 +150,15 @@ async function run() {
     })
 
 
+    // delete usesr
+    app.delete("/api/v1/:userId/deleteUser",async(req,res)=>{
+      const userId=req.params.userId
+      const query={_id:new ObjectId(userId)}
+      const result=await userCollection.deleteOne(query)
+      res.send(result)
+    })
+
+
 
 
 

@@ -150,6 +150,20 @@ async function run() {
     })
 
 
+    // create admin
+    app.patch("/api/v1/create-admin/:userId",async(req,res)=>{
+      const userId=req.params.userId 
+      const query={_id:new ObjectId(userId)}
+      const updatedDoc={
+        $set:{
+          role:"admin"
+        }
+      }
+      const result=await userCollection.updateOne(query,updatedDoc)
+      res.send(result)
+    })
+
+
     // delete usesr
     app.delete("/api/v1/:userId/deleteUser",async(req,res)=>{
       const userId=req.params.userId
@@ -157,6 +171,7 @@ async function run() {
       const result=await userCollection.deleteOne(query)
       res.send(result)
     })
+
 
 
 

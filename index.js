@@ -1,12 +1,16 @@
 const express = require("express")
 const cors = require("cors")
+const jwt=require("jsonwebtoken")
 const cookieParser = require("cookie-parser")
 require("dotenv").config()
 const port = process.env.PORT || 3000
 const app = express()
 
 // middleware
-app.use(cors())
+app.use(cors({
+  origin:["http://localhost:5173"],
+  credentials:true
+}))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -38,6 +42,23 @@ async function run() {
     const likeCollection = database.collection("like")
     const commentCollection = database.collection("comment")
     const userCollection = database.collection("user")
+
+
+    // jwt
+    app.post("/jwt",async(req,res)=>{
+      const user=req.body 
+      // console.log(user);
+      const token=jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{
+        expiresIn:'1h'
+      })
+      // console.log(token);
+      res
+      .cookie('token',token,{
+        httpOnly:true,
+        secure:false
+      })
+      .send({success:true})
+    })
 
     // get :: show survey data
     app.get("/api/v1/show-servey", async (req, res) => {

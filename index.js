@@ -37,6 +37,7 @@ async function run() {
     const surveyCollection = database.collection("survey")
     const likeCollection = database.collection("like")
     const commentCollection = database.collection("comment")
+    const userCollection = database.collection("user")
 
     // get :: show survey data
     app.get("/api/v1/show-servey", async (req, res) => {
@@ -87,6 +88,20 @@ async function run() {
       const comment = req.body
       console.log(comment);
       const result = await commentCollection.insertOne(comment)
+      res.send(result)
+    })
+
+    // post :: user data
+    app.post("/api/v1/users",async(req,res)=>{
+      const user=req.body 
+      const query={email:user.email}
+
+      const existingUser=await userCollection.findOne(query)
+      if(existingUser){
+        return res.send({message:'user already exists',insertedId:null})
+      }
+
+      const result=await userCollection.insertOne(user)
       res.send(result)
     })
 

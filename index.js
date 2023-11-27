@@ -72,7 +72,21 @@ async function run() {
       if(!isAdmin){
         return res.status(403).send({message:'forbidden access'})
       }
-      console.log(req.user.email,'check');
+      // console.log(req.user.email,'check');
+      next()
+    }
+
+    // verify admin (check database in the role admin)
+    const verifySurveyor=async(req,res,next)=>{
+      const email=req.user.email 
+      console.log(email,'check surveyor');
+      const query={email:email}
+      const user=await userCollection.findOne(query)
+      const isSurveyor=user?.role==='surveyor'
+      if(!isSurveyor){
+        return res.status(403).send({message:'forbidden access'})
+      }
+      console.log(req.user.email,'check surveyor');
       next()
     }
 
@@ -101,7 +115,7 @@ async function run() {
     // post :: create survey
     app.post("/api/v1/create-survey", async (req, res) => {
       const survey = req.body
-      console.log(survey);
+      // console.log(survey);
       const result = await surveyCollection.insertOne(survey)
       res.send(result)
     })
@@ -119,7 +133,7 @@ async function run() {
     // post :: survey like
     app.post("/api/v1/like-survey", async (req, res) => {
       const surveyLike = req.body
-      console.log(surveyLike);
+      // console.log(surveyLike);
       const result = await likeCollection.insertOne(surveyLike)
       res.send(result)
     })
@@ -139,7 +153,7 @@ async function run() {
     // post :: create comment 
     app.post("/api/v1/comment", async (req, res) => {
       const comment = req.body
-      console.log(comment);
+      // console.log(comment);
       const result = await commentCollection.insertOne(comment)
       res.send(result)
     })
@@ -190,6 +204,34 @@ async function run() {
     
       // console.log("Is admin:", admin);
       res.send({ admin });
+    });
+
+
+     // check surveyor
+     app.get("/api/v1/check-surveyor", verifyToken, async (req, res) => {
+
+      // console.log("Request user email:", req.user.email);
+      
+      if (req.query.email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden' });
+      }
+      
+      let query = {};
+      if (req.query.email) {
+        query = { email: req.query.email };
+      }
+      // console.log(" email:", req.query.email);
+    
+      const user = await userCollection.find(query).toArray();
+      // console.log("User found:", user);
+    
+      let surveyor = false;
+      if (user.length > 0) {
+        surveyor = user[0]?.role === 'surveyor';
+      }
+    
+      // console.log("Is surveyor:", surveyor);
+      res.send({ surveyor });
     });
 
 

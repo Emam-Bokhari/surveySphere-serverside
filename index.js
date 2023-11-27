@@ -150,6 +150,34 @@ async function run() {
     })
 
 
+    // check admin
+    app.get("/api/v1/check-admin", verifyToken, async (req, res) => {
+
+      // console.log("Request user email:", req.user.email);
+      
+      if (req.query.email !== req.user.email) {
+        return res.status(403).send({ message: 'forbidden' });
+      }
+      
+      let query = {};
+      if (req.query.email) {
+        query = { email: req.query.email };
+      }
+      // console.log(" email:", req.query.email);
+    
+      const user = await userCollection.find(query).toArray();
+      // console.log("User found:", user);
+    
+      let admin = false;
+      if (user.length > 0) {
+        admin = user[0]?.role === 'admin';
+      }
+    
+      // console.log("Is admin:", admin);
+      res.send({ admin });
+    });
+
+
     // create admin
     app.patch("/api/v1/create-admin/:userId",async(req,res)=>{
       const userId=req.params.userId 

@@ -45,6 +45,8 @@ async function run() {
 
 
     // create middleware
+
+    // verify token
     const verifyToken = async (req, res, next) => {
       const token = req.cookies?.token
       // console.log(token,'aita token');
@@ -61,7 +63,20 @@ async function run() {
 
     }
 
-    // jwt
+    // verify admin (check database in the role admin)
+    const verifyAdmin=async(req,res,next)=>{
+      const email=req.user.email 
+      const query={email:email}
+      const user=await userCollection.findOne(query)
+      const isAdmin=user?.role==='admin'
+      if(!isAdmin){
+        return res.status(403).send({message:'forbidden access'})
+      }
+      console.log(req.user.email,'check');
+      next()
+    }
+
+    // jwt token
     app.post("/jwt", async (req, res) => {
       const user = req.body
       // console.log(user);
@@ -130,7 +145,7 @@ async function run() {
     })
 
     // get :: all users data
-    app.get("/api/v1/all-users",verifyToken,async(req,res)=>{
+    app.get("/api/v1/all-users",verifyToken,verifyAdmin,async(req,res)=>{
       const result=await userCollection.find().toArray()
       res.send(result)
     })

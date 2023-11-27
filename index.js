@@ -76,7 +76,7 @@ async function run() {
       next()
     }
 
-    // verify admin (check database in the role admin)
+    // verify surveyor (check database in the role surveyor)
     const verifySurveyor=async(req,res,next)=>{
       const email=req.user.email 
       console.log(email,'check surveyor');
@@ -112,11 +112,34 @@ async function run() {
       res.send(result)
     })
 
+     // show add to cart data by user based
+     app.get("/api/v1/show-survey-user-based",async(req,res)=>{
+      let query={}
+
+      if(req.query.email){
+        query={email:req.query.email}
+      }
+      
+      const result=await surveyCollection.find(query).toArray()
+      res.send(result)
+    })
+
     // post :: create survey
     app.post("/api/v1/create-survey", async (req, res) => {
       const survey = req.body
-      // console.log(survey);
+      
+
+      console.log(survey.email,'survey email');
+
       const result = await surveyCollection.insertOne(survey)
+      res.send(result)
+    })
+
+     // delete :: delete survey
+     app.delete('/api/v1/:surveyId/delete-survey',async(req,res)=>{
+      const surveyId=req.params.surveyId 
+      const query={_id:new ObjectId(surveyId)}
+      const result=await surveyCollection.deleteOne(query)
       res.send(result)
     })
 
@@ -163,6 +186,8 @@ async function run() {
       const result=await userCollection.find().toArray()
       res.send(result)
     })
+
+
 
     // post :: user data
     app.post("/api/v1/users", async (req, res) => {
@@ -269,11 +294,6 @@ async function run() {
       const result=await userCollection.deleteOne(query)
       res.send(result)
     })
-
-
-
-
-
 
 
 

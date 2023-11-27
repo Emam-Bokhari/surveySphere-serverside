@@ -193,8 +193,8 @@ async function run() {
     });
 
 
-    // create admin
-    app.patch("/api/v1/create-admin/:userId",async(req,res)=>{
+    // patch :: make admin
+    app.patch("/api/v1/create-admin/:userId",verifyToken,verifyAdmin,async(req,res)=>{
       const userId=req.params.userId 
       const query={_id:new ObjectId(userId)}
       const updatedDoc={
@@ -206,9 +206,22 @@ async function run() {
       res.send(result)
     })
 
+     // patch :: make surveyor
+     app.patch("/api/v1/create-surveyor/:userId",verifyToken,verifyAdmin,async(req,res)=>{
+      const userId=req.params.userId 
+      const query={_id:new ObjectId(userId)}
+      const updatedDoc={
+        $set:{
+          role:"surveyor"
+        }
+      }
+      const result=await userCollection.updateOne(query,updatedDoc)
+      res.send(result)
+    })
+
 
     // delete usesr
-    app.delete("/api/v1/:userId/deleteUser",async(req,res)=>{
+    app.delete("/api/v1/:userId/deleteUser",verifyToken,verifyAdmin,async(req,res)=>{
       const userId=req.params.userId
       const query={_id:new ObjectId(userId)}
       const result=await userCollection.deleteOne(query)

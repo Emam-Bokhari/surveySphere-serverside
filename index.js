@@ -3,6 +3,7 @@ const cors = require("cors")
 const jwt = require("jsonwebtoken")
 const cookieParser = require("cookie-parser")
 require("dotenv").config()
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 3000
 const app = express()
 
@@ -42,6 +43,7 @@ async function run() {
     const likeCollection = database.collection("like")
     const commentCollection = database.collection("comment")
     const userCollection = database.collection("user")
+    const paymentCollection = database.collection("payment")
 
 
     // create middleware
@@ -62,6 +64,7 @@ async function run() {
       })
 
     }
+   
 
     // verify admin (check database in the role admin)
     const verifyAdmin=async(req,res,next)=>{
@@ -114,7 +117,7 @@ async function run() {
 
 
 
-     // show add to cart data by user based
+     // show  data by user based
      app.get("/api/v1/show-survey-user-based",async(req,res)=>{
       let query={}
 
@@ -321,13 +324,52 @@ async function run() {
     })
 
 
-    // delete usesr
+    // delete :: delete usesr
     app.delete("/api/v1/:userId/deleteUser",verifyToken,verifyAdmin,async(req,res)=>{
       const userId=req.params.userId
       const query={_id:new ObjectId(userId)}
       const result=await userCollection.deleteOne(query)
       res.send(result)
     })
+
+    // post :: payment gateway
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      // console.log(amount, 'amount inside the intent')
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    });
+
+
+    //  post :: payments and user data
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      // console.log(payment);
+      const result = await paymentCollection.insertOne(payment);
+      // console.log(payment.email);
+      const userEmail=payment.email
+      // console.log(userEmail,'ja payment korse tar email');
+
+      // update user role
+      const updateUserRole=await userCollection.updateOne(
+        {email:userEmail},
+        {$set:{role:'prouser'}}
+      )
+
+     
+
+      res.send({result,updateUserRole});
+    })
+
 
 
 

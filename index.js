@@ -112,6 +112,8 @@ async function run() {
       res.send(result)
     })
 
+
+
      // show add to cart data by user based
      app.get("/api/v1/show-survey-user-based",async(req,res)=>{
       let query={}
@@ -135,11 +137,43 @@ async function run() {
       res.send(result)
     })
 
+
+     // update :: update survey data
+     app.patch('/api/v1/:surveyId/update-survey',verifyToken,verifySurveyor,async(req,res)=>{
+      const surveyData=req.body 
+      const surveyId=req.params.surveyId
+      const query={_id:new ObjectId(surveyId)}
+      const updatedSurvey ={
+        $set:{
+          surveyTitle:surveyData.surveyTitle,
+          category:surveyData.category,
+          date:surveyData.date,
+          description:surveyData.description,
+          question1:surveyData.question1,
+          question2:surveyData.question2,
+          question3:surveyData.question3,
+          question4:surveyData.question4,
+          question5:surveyData.question5,
+        }
+      }
+      const result=await surveyCollection.updateOne(query,updatedSurvey)
+      res.send(result)
+    
+    })
+
      // delete :: delete survey
-     app.delete('/api/v1/:surveyId/delete-survey',async(req,res)=>{
+     app.delete('/api/v1/:surveyId/delete-survey',verifyToken,verifySurveyor,async(req,res)=>{
       const surveyId=req.params.surveyId 
       const query={_id:new ObjectId(surveyId)}
       const result=await surveyCollection.deleteOne(query)
+      res.send(result)
+    })
+
+    // get :: survey details (aita just manage survey te use kora hoise surveyr data gula get korar jonno)
+    app.get("/api/v1/:surveyId/secure-surveys", async (req, res) => {
+      const surveyId = req.params.surveyId
+      const query = { _id: new ObjectId(surveyId) }
+      const result = await surveyCollection.findOne(query)
       res.send(result)
     })
 

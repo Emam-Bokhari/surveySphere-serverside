@@ -365,9 +365,15 @@ async function run() {
         {$set:{role:'prouser'}}
       )
 
-     
-
       res.send({result,updateUserRole});
+    })
+
+    // get :: show payment history data 
+    app.get("/api/v1/user-payment-history",verifyToken,verifyAdmin,async(req,res)=>{
+      // console.log(req.user.email);
+      const result=await paymentCollection.find().toArray()
+      res.send(result)
+      
     })
 
 

@@ -40,10 +40,11 @@ async function run() {
     //  database collection
     const database = client.db("surveySphereDB")
     const surveyCollection = database.collection("survey")
-    const likeCollection = database.collection("like")
     const commentCollection = database.collection("comment")
     const userCollection = database.collection("user")
     const paymentCollection = database.collection("payment")
+    const surveyQNACollection = database.collection("surveyQNA")
+    const reportCollection = database.collection("report")
 
 
     // create middleware
@@ -93,6 +94,8 @@ async function run() {
       next()
     }
 
+    
+
     // jwt token
     app.post("/jwt", async (req, res) => {
       const user = req.body
@@ -140,6 +143,22 @@ async function run() {
       res.send(result)
     })
 
+    // get :: show report data
+    app.get("/api/v1/show-report",async(req,res)=>{
+      const result=await reportCollection.find().toArray()
+      res.send(result)
+    })
+
+    
+
+    // post :: creae report
+    app.post("/api/v1/create-report",async(req,res)=>{
+      console.log(req.user.email);
+      const report=req.body 
+      const result=await reportCollection.insertOne(report)
+      res.send(result)
+    })
+
 
      // update :: update survey data
      app.patch('/api/v1/:surveyId/update-survey',verifyToken,verifySurveyor,async(req,res)=>{
@@ -153,10 +172,6 @@ async function run() {
           date:surveyData.date,
           description:surveyData.description,
           question1:surveyData.question1,
-          question2:surveyData.question2,
-          question3:surveyData.question3,
-          question4:surveyData.question4,
-          question5:surveyData.question5,
         }
       }
       const result=await surveyCollection.updateOne(query,updatedSurvey)
@@ -189,14 +204,37 @@ async function run() {
       res.send(result)
     })
 
+    // patch :: like count
+    app.patch('/api/v1/survey/like/:id', async (req, res) => {
+      try {
+          const { id } = req.params;
+  
+          const query = { _id: new ObjectId(id) };
+          const info = req.body;
+          console.log(info)
+          const updateDoc = {
+              $inc: { likesCount: 1 },
+              $push: {
+                  // likesCount: info.likesCount + 1,
+                  likerEmail: info.userEmail,
+                  likerName: info.userName,
+              },
+          };
+          console.log(updateDoc)
+          const result = await surveyCollection.updateOne(query, updateDoc);
+  
+          if (result.modifiedCount === 1) {
+              res.json({ success: true });
+          } else {
+              res.status(404).json({ success: false, error: 'Survey not found' });
+          }
+      } catch (error) {
+          console.error(error);
+          res.status(500).json({ success: false, error: 'Internal Server Error' });
+      }
+  });
 
-    // post :: survey like
-    app.post("/api/v1/like-survey", async (req, res) => {
-      const surveyLike = req.body
-      // console.log(surveyLike);
-      const result = await likeCollection.insertOne(surveyLike)
-      res.send(result)
-    })
+   
 
 
     // get :: show comment
@@ -218,8 +256,23 @@ async function run() {
       res.send(result)
     })
 
+    // get :: 
+    app.get("/api/v1/:surveyQnaId/show-survey-qna-data",async(req,res)=>{
+      const surveyQnaId=req.params.surveyQnaId
+      const query={_id:new ObjectId(surveyQnaId)}
+      const result=await surveyQNACollection.findOne(query)
+      res.send(result)
+    })
+
+
     // get :: all users data
     app.get("/api/v1/all-users",verifyToken,verifyAdmin,async(req,res)=>{
+      const result=await userCollection.find().toArray()
+      res.send(result)
+    })
+
+    // get :: all users data for pro user
+    app.get("/api/v1/all-users-for-pro",async(req,res)=>{
       const result=await userCollection.find().toArray()
       res.send(result)
     })
@@ -376,6 +429,7 @@ async function run() {
       
     })
 
+    
 
 
 

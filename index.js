@@ -195,6 +195,17 @@ async function run() {
       res.send(result)
     })
 
+    // get :: recent survey (for featured survey)
+    app.get("/api/v1/recent-surveys", async (req, res) => {
+      try {
+        const recentSurveys = await surveyCollection.find().sort({ _id: -1 }).limit(6).toArray();
+        res.send(recentSurveys);
+      } catch (error) {
+        console.error("Error fetching recent surveys:", error);
+        res.status(500).send("Internal Server Error");
+      }
+    });
+
 
     // get :: survey details
     app.get("/api/v1/:surveyId/survey-details", async (req, res) => {

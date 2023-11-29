@@ -118,14 +118,19 @@ async function run() {
       res.send(result)
     })
 
+    // show  all survey
+    app.get("/api/v1/show-all-surveys",async(req,res)=>{
+      const result=await surveyCollection.find().toArray()
+      res.send(result)
+    })
 
 
      // show  data by user based
      app.get("/api/v1/show-survey-user-based",async(req,res)=>{
       let query={}
 
-      if(req.query.email){
-        query={email:req.query.email}
+      if(req.query.surveyorEmail){
+        query={email:req.query.surveyorEmail}
       }
       
       const result=await surveyCollection.find(query).toArray()
@@ -143,6 +148,23 @@ async function run() {
       res.send(result)
     })
 
+    // patch :: publish survey
+    app.patch("/api/v1/publish-survey/:surveyId",async(req,res)=>{
+      const surveyData=req.body 
+      const surveyId=req.params.surveyId
+      const query={_id:new ObjectId(surveyId)}
+      // console.log(surveyData);
+      // console.log(surveyId);
+      const updateData={
+        $set:{
+          status:surveyData.status,
+          feedback:surveyData.feedback
+        }
+      }
+      const result=await surveyCollection.updateOne(query,updateData)
+      res.send(result)
+    })
+
     // get :: show report data
     app.get("/api/v1/show-report",async(req,res)=>{
       const result=await reportCollection.find().toArray()
@@ -153,7 +175,7 @@ async function run() {
 
     // post :: creae report
     app.post("/api/v1/create-report",async(req,res)=>{
-      console.log(req.user.email);
+      
       const report=req.body 
       const result=await reportCollection.insertOne(report)
       res.send(result)
@@ -167,6 +189,7 @@ async function run() {
       const query={_id:new ObjectId(surveyId)}
       const updatedSurvey ={
         $set:{
+          surveyorEmail:surveyData.surveyorEmail,
           surveyTitle:surveyData.surveyTitle,
           category:surveyData.category,
           date:surveyData.date,

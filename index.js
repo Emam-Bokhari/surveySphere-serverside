@@ -534,7 +534,7 @@ app.get("/api/v1/show-total-voted", async (req, res) => {
 run().catch(console.dir);
 
 
-app.get("/health", (req, res) => {
+app.get("/", (req, res) => {
   res.send('Server is running...');
 })
 

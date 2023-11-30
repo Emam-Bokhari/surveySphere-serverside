@@ -43,7 +43,7 @@ async function run() {
     const commentCollection = database.collection("comment")
     const userCollection = database.collection("user")
     const paymentCollection = database.collection("payment")
-    const surveyQNACollection = database.collection("surveyQNA")
+    const surveyVoteCollection = database.collection("surveyVote")
     const reportCollection = database.collection("report")
 
 
@@ -268,6 +268,68 @@ async function run() {
       }
   });
 
+  // get :: survey vote
+  app.get("/api/v1/show-survey-vote",async(req,res)=>{
+    const result=await surveyVoteCollection.find().toArray()
+    res.send(result)
+  })
+
+  // get :: total vote of survey
+app.get("/api/v1/show-total-voted", async (req, res) => {
+  try {
+    const surveyId = req.query.surveyId;
+
+    if (!surveyId) {
+      res.status(400).send("Survey ID is required");
+      return;
+    }
+
+    const result = await surveyVoteCollection.aggregate([
+      {
+        $match: { surveyId } // Match documents with the specified surveyId
+      },
+      {
+        $group: {
+          _id: null,
+          totalVote: {
+            $sum: { $cond: [{ $eq: ['$answer1', 'yes'] }, 1, 0] }
+          }
+        }
+      }
+    ]).toArray();
+
+    const vote = result.length > 0 ? result[0].totalVote : 0;
+    res.send({ vote });
+  } catch (error) {
+    console.error("Error fetching total votes:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+  
+
+  // get :: admin stats
+  app.get("/api/v1/admin-stats",async (req, res) => {
+   const users= await userCollection.estimatedDocumentCount()
+    const payments=await paymentCollection.estimatedDocumentCount()
+      res.send({users,payments})
+
+  });
+
+
+  // post :: creae survey-vote
+  app.post("/api/v1/create-surveyVote",async(req,res)=>{
+    const surveyVote=req.body 
+    console.log(surveyVote);
+    const query={email:surveyVote.email}
+    const existingUser=await surveyVoteCollection.findOne(query)
+    if(existingUser){
+      return res.send({message:"You are already voted this survey!"})
+    }
+    const result=await surveyVoteCollection.insertOne(surveyVote)
+    res.send(result)
+  })
+
    
 
 
@@ -289,14 +351,7 @@ async function run() {
       const result = await commentCollection.insertOne(comment)
       res.send(result)
     })
-
-    // get :: 
-    app.get("/api/v1/:surveyQnaId/show-survey-qna-data",async(req,res)=>{
-      const surveyQnaId=req.params.surveyQnaId
-      const query={_id:new ObjectId(surveyQnaId)}
-      const result=await surveyQNACollection.findOne(query)
-      res.send(result)
-    })
+  
 
 
     // get :: all users data

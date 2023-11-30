@@ -106,7 +106,7 @@ async function run() {
       // console.log(token);
       res
         .cookie('token', token, {
-          httpOnly: true,
+          httpOnly: false,
           secure: true,
           sameSite:"none"
         })

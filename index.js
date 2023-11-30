@@ -9,7 +9,7 @@ const app = express()
 
 // middleware
 app.use(cors({
-  origin: ["http://localhost:5173"],
+  origin: ["https://surveyspehere.web.app/"],
   credentials: true
 }))
 app.use(express.json())
@@ -106,8 +106,9 @@ async function run() {
       // console.log(token);
       res
         .cookie('token', token, {
-          httpOnly: true,
-          secure: false
+          httpOnly: false,
+          secure: true,
+          sameSite:'none'
         })
         .send({ success: true })
     })
